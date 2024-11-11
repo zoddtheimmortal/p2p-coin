@@ -1,5 +1,6 @@
 import time
 import hashlib
+from typing import List
 
 class Block:
     def __init__(self, index: int, transactions: List[str], previous_hash: str, nonce: int = 0):
@@ -37,7 +38,7 @@ class Blockchain:
         new_block.mine_block(self.difficulty)
         self.chain.append(new_block)
 
-        def add_transaction(self, transaction: str):
+    def add_transaction(self, transaction: str):
         self.pending_transactions.append(transaction)
 
     def mine_pending_transactions(self):
@@ -58,28 +59,3 @@ class Blockchain:
                 print("Previous block's hash doesn't match.")
                 return False
         return True
-
-def display_blockchain(blockchain: Blockchain):
-    for block in blockchain.chain:
-        print(f"Index: {block.index}")
-        print(f"Timestamp: {time.ctime(block.timestamp)}")
-        print(f"Transactions: {block.transactions}")
-        print(f"Previous Hash: {block.previous_hash}")
-        print(f"Hash: {block.hash}")
-        print(f"Nonce: {block.nonce}")
-        print("---------")
-
-def user_interaction(blockchain: Blockchain):
-    while True:
-        action = input("Enter 't' to add a transaction, 'm' to mine, 'v' to view the chain, or 'q' to quit: ")
-        if action == 't':
-            transaction = input("Enter transaction data: ")
-            blockchain.add_transaction(transaction)
-        elif action == 'm':
-            blockchain.mine_pending_transactions()
-        elif action == 'v':
-            display_blockchain(blockchain)
-        elif action == 'q':
-            break
-        else:
-            print("Invalid input, try again.")
