@@ -13,10 +13,10 @@ def main():
     node = Node(blockchain,host,port)
 
     while True:
-        peer_ip = input("Enter peer IP: ")
-        peer_port = int(input("Enter peer port: "))
+        peer_ip = 'localhost'
+        peer_port = int(input("Enter peer port or -1 to quit: "))
 
-        if not peer_ip or not peer_port:
+        if (peer_port == -1):
             break
 
         if (peer_ip, peer_port) not in node.peers:
@@ -36,18 +36,19 @@ def main():
         if action == 't':
             transaction = input("Enter transaction data: ")
             blockchain.add_transaction(transaction)
-            node.broadcast({"transaction": transaction}, "transaction")
+            node.broadcast({"data": transaction,"type":'transaction'}, "transaction")
             print("Transaction added and broadcasted.")
 
         elif action == 'm':
             blockchain.mine_pending_transactions()
-            last_block = blockchain.get_latest_block()
-            node.broadcast(last_block.__dict__, "block")
-            print(f"Block mined and broadcasted: {last_block.hash}")
+            new_block = blockchain.get_latest_block()
+            message = {"type": "block", "data": new_block.__dict__}
+            node.broadcast(message, "block")
+            print(f"Block mined and broadcasted: {new_block.hash}")
 
         elif action == 'v':
             for block in blockchain.chain:
-                print(block)
+                print(f"Block {block.index} [{block.hash}]: {block.transactions}")
         
         elif action == 'b':
             if len(blockchain.chain) > 1:

@@ -15,11 +15,6 @@ class Node:
         self.server.listen()
 
     def broadcast(self, data:Dict, message_type:str):
-        data_with_timestamp = {
-            "type": message_type,
-            "data": data,
-            "timestamp": time.time()
-        }
 
         for peer in self.peers:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -37,12 +32,12 @@ class Node:
                 received_time = time.time()
                 sent_time = message.get('timestamp',received_time)
                 latency = received_time - sent_time
-                print(f'Latency: {latency:.6f} secs for {message["type"]} from {addr}')
+                print(f'Latency: {latency:.6f} secs for {message} from {addr}')
 
                 if message['type'] == 'transaction':
                     self.blockchain.add_transaction(message['data'])
                 elif message['type']=='block':
-                    new_block = Block(**message['data'])
+                    new_block = Block(index=message['data']['index'],transactions=message['data']['transactions'],previous_hash=message['data']['previous_hash'],nonce=message['data']['nonce'])
                     self.blockchain.add_block(new_block)
                     print(f'Added block {new_block.hash} from {addr}')
 
