@@ -37,7 +37,7 @@ class Node:
                 if message['type'] == 'transaction':
                     self.blockchain.add_transaction(message['data'])
                 elif message['type']=='block':
-                    new_block = Block(index=message['data']['index'],transactions=message['data']['transactions'],previous_hash=message['data']['previous_hash'],nonce=message['data']['nonce'])
+                    new_block = Block(index=message['data']['index'],transactions=message['data']['transactions'],previous_hash=message['data']['previous_hash'],hash=message['data']['hash'],nonce=message['data']['nonce'])
                     self.blockchain.add_block(new_block)
                     print(f'Added block {new_block.hash} from {addr}')
 

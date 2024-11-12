@@ -3,13 +3,13 @@ import hashlib
 from typing import List
 
 class Block:
-    def __init__(self, index: int, transactions: List[str], previous_hash: str, nonce: int = 0):
+    def __init__(self, index: int, transactions: List[str], previous_hash: str,hash:str=None, nonce: int = 0):
         self.index = index
         self.timestamp = time.time()
         self.transactions = transactions
         self.previous_hash = previous_hash
         self.nonce = nonce
-        self.hash = self.calculate_hash()
+        self.hash:str = hash if hash is not None else self.calculate_hash()
 
     def calculate_hash(self) -> str:
         block_string = f"{self.index}{self.timestamp}{self.transactions}{self.previous_hash}{self.nonce}"
@@ -28,7 +28,7 @@ class Blockchain:
         self.pending_transactions = []
 
     def create_genesis_block(self) -> Block:
-        return Block(0, ["Genesis Block"], "0")
+        return Block(index=0, transactions=["Genesis Block"],hash="0",previous_hash="0")
 
     def get_latest_block(self) -> Block:
         return self.chain[-1]
