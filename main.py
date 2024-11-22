@@ -36,13 +36,13 @@ def main():
             _amt = float(input("Enter amount: "))
             transaction=f"{_from}->{_to}::{_amt}"
             blockchain.add_transaction(transaction)
-            node.broadcast({"data": transaction,"type":'transaction'}, "transaction")
+            node.broadcast({"data": transaction,"type":'transaction',"return_port":port}, "transaction")
             print("Transaction added and broadcasted.")
 
         elif action == 'm':
             blockchain.mine_pending_transactions()
             new_block = blockchain.get_latest_block()
-            message = {"type": "block", "data": new_block.__dict__}
+            # message = {"type": "block", "data": new_block.__dict__, "return_port": port}
             print(f"Block mined: {new_block.hash}")
             print(f"Press 'b' to broadcast the block to peers.")
 
@@ -53,7 +53,7 @@ def main():
         elif action == 'b':
             if len(blockchain.chain) > 1:
                 last_block = blockchain.get_latest_block()
-                message = {"type": "block", "data": last_block.__dict__}
+                message = {"type": "block", "data": last_block.__dict__, "return_port": port}
                 node.broadcast(message, "block")
                 print(f"Last block broadcasted: {last_block.hash}")
             else:

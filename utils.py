@@ -12,7 +12,7 @@ class Block:
         self.hash:str = hash if hash is not None else self.calculate_hash()
 
     def calculate_hash(self) -> str:
-        block_string = f"{self.index}{self.timestamp}{self.transactions}{self.previous_hash}{self.nonce}"
+        block_string = f"{self.index}{self.transactions}{self.previous_hash}{self.nonce}"
         return hashlib.sha256(block_string.encode()).hexdigest()
 
     def mine_block(self, difficulty: int):
@@ -34,9 +34,18 @@ class Blockchain:
         return self.chain[-1]
 
     def add_block(self, new_block: Block):
+        for blocks in self.chain:
+            if blocks.hash == new_block.hash:
+                print("Block already exists.")
+                return -1
+            
+        if new_block.previous_hash != self.get_latest_block().hash:
+            print("Invalid block. Previous hash doesn't match.")
+            return -1
+
         new_block.previous_hash = self.get_latest_block().hash
-        new_block.mine_block(self.difficulty)
         self.chain.append(new_block)
+        return 1
 
     def add_transaction(self, transaction: str):
         self.pending_transactions.append(transaction)
@@ -44,7 +53,10 @@ class Blockchain:
     def mine_pending_transactions(self):
         if self.pending_transactions:
             new_block = Block(len(self.chain), self.pending_transactions, self.get_latest_block().hash)
-            self.add_block(new_block)
+            new_block.mine_block(self.difficulty)
+            res=self.add_block(new_block)
+            if res==-1:
+                return
             self.pending_transactions = []
 
     def is_chain_valid(self) -> bool:

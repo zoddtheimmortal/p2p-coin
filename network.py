@@ -15,7 +15,6 @@ class Node:
         self.server.listen()
 
     def broadcast(self, data:Dict, message_type:str):
-
         for peer in self.peers:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect(peer)
@@ -36,9 +35,23 @@ class Node:
 
                 if message['type'] == 'transaction':
                     self.blockchain.add_transaction(message['data'])
+                elif message['type'] == 'reject':
+                    rejected_hash=message['hash']
+                    latest_block=self.blockchain.get_latest_block()
+                    if latest_block.hash==rejected_hash:
+                        self.blockchain.chain.pop()
+                        print(f'Removed block {rejected_hash} from {addr}')
+                    else:
+                        print(f'Rejected block {rejected_hash} not found in chain')
                 elif message['type']=='block':
                     new_block = Block(index=message['data']['index'],transactions=message['data']['transactions'],previous_hash=message['data']['previous_hash'],hash=message['data']['hash'],nonce=message['data']['nonce'])
-                    self.blockchain.add_block(new_block)
+                    return_port=message['return_port']
+                    res=self.blockchain.add_block(new_block)
+                    if res==-1:
+                        message = {"type": "reject", "hash": new_block.hash}
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                            s.connect(('localhost',return_port))
+                            s.sendall(json.dumps(message).encode())
                     print(f'Added block {new_block.hash} from {addr}')
 
     def listen(self):
