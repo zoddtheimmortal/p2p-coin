@@ -26,6 +26,7 @@ class Blockchain:
         self.chain = [self.create_genesis_block()]
         self.difficulty = 4
         self.pending_transactions = []
+        self.unbroadcasted_blocks = []
 
     def create_genesis_block(self) -> Block:
         return Block(index=0, transactions=["Genesis Block"],hash="0",previous_hash="0")
@@ -36,9 +37,20 @@ class Blockchain:
     def add_block(self, new_block: Block):
         for blocks in self.chain:
             if blocks.hash == new_block.hash:
-                print("Block already exists.")
-                return -1
-            
+                blocks=new_block
+                print("Block already exists in chain. Replaced.")
+                self.unbroadcasted_blocks=[]
+                return 1
+        
+        for blocks in self.unbroadcasted_blocks:
+            if blocks.hash == new_block.hash:
+                blocks=new_block
+                print("Block already exists in unbroadcasted blocks. Replaced.")
+                new_block.previous_hash = self.get_latest_block().hash
+                self.chain.append(new_block)
+                self.unbroadcasted_blocks=[]
+                return 1
+
         if new_block.previous_hash != self.get_latest_block().hash:
             print("Invalid block. Previous hash doesn't match.")
             return -1
@@ -54,9 +66,7 @@ class Blockchain:
         if self.pending_transactions:
             new_block = Block(len(self.chain), self.pending_transactions, self.get_latest_block().hash)
             new_block.mine_block(self.difficulty)
-            res=self.add_block(new_block)
-            if res==-1:
-                return
+            self.unbroadcasted_blocks.append(new_block)
             self.pending_transactions = []
 
     def is_chain_valid(self) -> bool:
