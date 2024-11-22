@@ -1,5 +1,6 @@
 
 import threading
+import time
 from network import Node
 from performance import analyse_performance
 from utils import Blockchain
@@ -28,19 +29,25 @@ def main():
     while True:
         action = input("\nOptions:\n - 't': Add a transaction\n - 'm': Mine a new block\n"
                        " - 'v': View the blockchain\n - 'b': Broadcast last mined block\n"
-                       " - 'l': Show current latency stats\n - 'q': Quit\nChoose an option: ")
+                       " - 'l': Show current latency stats\n - 'va': Show blockchain validity\n - 'q': Quit\nChoose an option: ")
         
         if action == 't':
             _from = input("Enter sender address: ")
             _to = input("Enter receiver address: ")
             _amt = float(input("Enter amount: "))
-            transaction=f"{_from}->{_to}::{_amt}"
+            transaction=f"{_from}->{_to}::{_amt}::{time.time()}"
             blockchain.add_transaction(transaction)
             node.broadcast({"data": transaction,"type":'transaction',"return_port":port}, "transaction")
             print("Transaction added and broadcasted.")
 
         elif action == 'm':
             blockchain.mine_pending_transactions()
+            if(len(blockchain.unbroadcasted_blocks)<=0):
+                print("No blocks to mine.")
+                continue
+            if(len(blockchain.unbroadcasted_blocks)>1):
+                print("Unbroadcasted blocks exist. Broadcast them first.")
+                continue
             new_block = blockchain.unbroadcasted_blocks[-1]
             # message = {"type": "block", "data": new_block.__dict__, "return_port": port}
             print(f"Block mined: {new_block.hash}")
@@ -51,16 +58,33 @@ def main():
                 print(f"Block {block.index} [{block.hash}]: {block.transactions}")
         
         elif action == 'b':
-            if len(blockchain.unbroadcasted_blocks) > 0:
-                print(f"Broadcasting last block: {blockchain.unbroadcasted_blocks[-1].__dict__}")
-                last_block = blockchain.unbroadcasted_blocks[-1]
-                message = {"type": "block", "data": last_block.__dict__, "return_port": port}
-                node.broadcast(message, "block")
-                print(f"Last block broadcasted: {last_block.hash}")
-                blockchain.unbroadcasted_blocks = []
-                blockchain.add_block(last_block)
+            if len(blockchain.unbroadcasted_blocks) == 1:
+                for last_block in blockchain.unbroadcasted_blocks:
+                    print(f"Broadcasting last block: {last_block.__dict__}")
+                    message = {"type": "block", "data": last_block.__dict__, "return_port": port}
+                    node.broadcast(message, "block")
+                    print(f"Last block broadcasted: {last_block.hash}")
+                    blockchain.unbroadcasted_blocks = []
+                    res=blockchain.add_block(last_block)
+
+                    ghost_txn=[]
+                    latest_block=blockchain.get_latest_block()
+                    if res==-1:
+                        for t2 in last_block.transactions:
+                            if t2 not in latest_block.transactions:
+                                if t2 not in ghost_txn:
+                                    ghost_txn.append(t2)
+
+                    if len(ghost_txn)>0:
+                        print(f"Ghost transactions found: {ghost_txn}")
+                        for t in ghost_txn:
+                            blockchain.add_transaction(t)
+
             else:
                 print("No blocks to broadcast.")
+
+        elif action=='va':
+            blockchain.is_chain_valid()
 
         elif action == 'l':
             analyse_performance(blockchain)

@@ -1,3 +1,4 @@
+import json
 import time
 import hashlib
 from typing import List
@@ -12,7 +13,7 @@ class Block:
         self.hash:str = hash if hash is not None else self.calculate_hash()
 
     def calculate_hash(self) -> str:
-        block_string = f"{self.index}{self.transactions}{self.previous_hash}{self.nonce}"
+        block_string = f"{self.index}{json.dumps(self.transactions)}{self.previous_hash}{self.nonce}"
         return hashlib.sha256(block_string.encode()).hexdigest()
 
     def mine_block(self, difficulty: int):
@@ -44,7 +45,6 @@ class Blockchain:
         
         for blocks in self.unbroadcasted_blocks:
             if blocks.hash == new_block.hash:
-                blocks=new_block
                 print("Block already exists in unbroadcasted blocks. Replaced.")
                 new_block.previous_hash = self.get_latest_block().hash
                 self.chain.append(new_block)

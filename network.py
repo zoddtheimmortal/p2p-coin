@@ -35,14 +35,19 @@ class Node:
 
                 if message['type'] == 'transaction':
                     self.blockchain.add_transaction(message['data'])
+
+
                 elif message['type'] == 'reject':
                     rejected_hash=message['hash']
                     latest_block=self.blockchain.get_latest_block()
+
                     if latest_block.hash==rejected_hash:
                         self.blockchain.chain.pop()
                         print(f'Removed block {rejected_hash} from {addr}')
                     else:
                         print(f'Rejected block {rejected_hash} not found in chain')
+
+
                 elif message['type']=='block':
                     new_block = Block(index=message['data']['index'],transactions=message['data']['transactions'],previous_hash=message['data']['previous_hash'],hash=message['data']['hash'],nonce=message['data']['nonce'])
                     return_port=message['return_port']
