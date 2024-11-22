@@ -29,7 +29,7 @@ def main():
     while True:
         action = input("\nOptions:\n - 't': Add a transaction\n - 'm': Mine a new block\n"
                        " - 'v': View the blockchain\n - 'b': Broadcast last mined block\n"
-                       " - 'l': Show current latency stats\n - 'va': Show blockchain validity\n - 'q': Quit\nChoose an option: ")
+                       " - 'l': Show current latency stats\n - 'c': Check blockchain validity\n - 'p': Display pending transactions\n - 'q': Quit\nChoose an option: ")
         
         if action == 't':
             _from = input("Enter sender address: ")
@@ -54,8 +54,7 @@ def main():
             print(f"Press 'b' to broadcast the block to peers.")
 
         elif action == 'v':
-            for block in blockchain.chain:
-                print(f"Block {block.index} [{block.hash}]: {block.transactions}")
+            blockchain.display_chain()
         
         elif action == 'b':
             if len(blockchain.unbroadcasted_blocks) == 1:
@@ -83,7 +82,15 @@ def main():
             else:
                 print("No blocks to broadcast.")
 
-        elif action=='va':
+        elif action=='p':
+            if len(blockchain.pending_transactions)==0:
+                print("No pending transactions.")
+                continue
+            print("Pending transactions:")
+            for transaction in blockchain.pending_transactions:
+                print(transaction)
+
+        elif action=='c':
             blockchain.is_chain_valid()
 
         elif action == 'l':

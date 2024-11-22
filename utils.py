@@ -54,6 +54,25 @@ class Blockchain:
         if new_block.previous_hash != self.get_latest_block().hash:
             print("Invalid block. Previous hash doesn't match.")
             return -1
+        
+        for blocks in self.unbroadcasted_blocks:
+            ghost_txn=[]
+            for t2 in new_block.transactions:
+                if t2 in blocks.transactions:
+                    if t2 not in ghost_txn:
+                        ghost_txn.append(t2)
+                        blocks.transactions.remove(t2)
+
+            if len(ghost_txn)>0:
+                print(f"Ghost transactions found: {ghost_txn}")
+                for t in ghost_txn:
+                    self.add_transaction(t)
+                self.unbroadcasted_blocks.remove(blocks)
+
+        for t2 in new_block.transactions:
+            if t2 in self.pending_transactions:
+                print(f"Transaction {t2} already exists in pending transactions. Removed.")
+                self.pending_transactions.remove(t2)
 
         new_block.previous_hash = self.get_latest_block().hash
         self.chain.append(new_block)
@@ -80,4 +99,13 @@ class Blockchain:
             if current_block.previous_hash != previous_block.hash:
                 print("Previous block's hash doesn't match.")
                 return False
+            
+        print("Chain is valid.")
+        self.display_chain()
         return True
+    
+    def display_chain(self):
+        print("-"*20)
+        for block in self.chain:
+            print(f"Block {block.index} [{block.hash}]: {block.transactions}")
+        print("-"*20)
